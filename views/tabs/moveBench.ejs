@@ -1,0 +1,11 @@
+<h2>Move Bench</h2>
+<p><strong>Current Bench:</strong> <%= currentRow || 'Unknown' %></p>
+<form action="/batch/<%= batch.batchNumber %>/move-bench" method="POST">
+    <label for="newBench">Select New Bench:</label>
+    <select name="newBench" id="newBench" required>
+        <% benches.forEach(bench => { %>
+            <option value="<%= bench.Row %>"><%= bench.Row %></option>
+        <% }); %>
+    </select>
+    <button type="submit">Move</button>
+</form>

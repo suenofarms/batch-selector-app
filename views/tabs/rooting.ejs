@@ -1,0 +1,12 @@
+<h2>Change Rooting Progress</h2>
+<form action="/batch/rooting/<%= batch.batchNumber %>" method="POST">
+  <label for="rootingProgress">Rooting Progress:</label>
+  <select name="rootingProgress" id="rootingProgress" required>
+    <option value="Unrooted" <%= batch.rootingProgress === 'Unrooted' ? 'selected' : '' %>>Unrooted</option>
+    <option value="Callus" <%= batch.rootingProgress === 'Callus' ? 'selected' : '' %>>Callus</option>
+    <option value="Root Emergence" <%= batch.rootingProgress === 'Root Emergence' ? 'selected' : '' %>>Root Emergence</option>
+    <option value="Rooted" <%= batch.rootingProgress === 'Rooted' ? 'selected' : '' %>>Rooted</option>
+    <option value="Fully Rooted" <%= batch.rootingProgress === 'Fully Rooted' ? 'selected' : '' %>>Fully Rooted</option>
+  </select>
+  <button type="submit">Update</button>
+</form>

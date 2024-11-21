@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Batch Details</title>
+    <script>
+        // Function to switch between tabs
+        function showTab(tabId) {
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.style.display = 'none');
+            document.getElementById(tabId).style.display = 'block';
+
+            // Highlight active tab
+            const tabLinks = document.querySelectorAll('.tab-link');
+            tabLinks.forEach(link => link.classList.remove('active'));
+            document.querySelector(`[data-tab="${tabId}"]`).classList.add('active');
+        }
+    </script>
+    <style>
+        .tabs {
+            display: flex;
+            border-bottom: 1px solid #ccc;
+            margin-bottom: 10px;
+        }
+        .tab-link {
+            padding: 10px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-bottom: none;
+            background-color: #f9f9f9;
+            margin-right: 5px;
+        }
+        .tab-link.active {
+            background-color: #fff;
+            font-weight: bold;
+        }
+        .tab-content {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <h1>Batch Details</h1>
+
+    <!-- Tabs Navigation -->
+    <div class="tabs">
+        <div class="tab-link active" data-tab="infoTab" onclick="showTab('infoTab')">Info</div>
+        <div class="tab-link" data-tab="rootingStatusTab" onclick="showTab('rootingStatusTab')">Change Rooting Status</div>
+        <div class="tab-link" data-tab="quantityTab" onclick="showTab('quantityTab')">Quantity Updates</div>
+        <div class="tab-link" data-tab="moveBenchTab" onclick="showTab('moveBenchTab')">Move Bench</div>
+    </div>
+
+    <!-- Info Tab -->
+    <div id="infoTab" class="tab-content" style="display: block;">
+        <h2>Info</h2>
+        <p><strong>Batch Number:</strong> <%= batch.batchNumber %></p>
+        <p><strong>Total Tray Count:</strong> <%= batch.totalTrayCount %></p>
+        <p><strong>Current Row:</strong> <%= batch.currentRow %></p>
+        <p><strong>Rooting Progress:</strong> <%= batch.rootingProgress %></p>
+        <p><strong>Status:</strong> <%= batch.status %></p>
+
+        <h3>Logs</h3>
+        <ul>
+            <% batch.logs.forEach(log => { %>
+                <li>
+                    <strong>Type:</strong> <%= log.type %><br>
+                    <strong>Details:</strong> <%= log.details %><br>
+                    <strong>Count:</strong> <%= log.count %><br>
+                    <strong>Timestamp:</strong> <%= new Date(log.timestamp).toLocaleString() %>
+                </li>
+            <% }); %>
+        </ul>
+    </div>
+
+    <!-- Change Rooting Status Tab -->
+    <div id="rootingStatusTab" class="tab-content">
+        <h2>Change Rooting Status</h2>
+        <form action="/batch/<%= batch.batchNumber %>/update-rooting" method="POST">
+            <label for="rootingProgress">Select Rooting Progress:</label>
+            <select name="rootingProgress" id="rootingProgress" required>
+                <option value="Unrooted" <%= batch.rootingProgress === 'Unrooted' ? 'selected' : '' %>>Unrooted</option>
+                <option value="Callus" <%= batch.rootingProgress === 'Callus' ? 'selected' : '' %>>Callus</option>
+                <option value="Root Emergence" <%= batch.rootingProgress === 'Root Emergence' ? 'selected' : '' %>>Root Emergence</option>
+                <option value="Rooted" <%= batch.rootingProgress === 'Rooted' ? 'selected' : '' %>>Rooted</option>
+                <option value="Fully Rooted" <%= batch.rootingProgress === 'Fully Rooted' ? 'selected' : '' %>>Fully Rooted</option>
+            </select>
+            <button type="submit">Update</button>
+        </form>
+    </div>
+
+    <!-- Quantity Tab -->
+    <div id="quantityTab" class="tab-content">
+        <h2>Update Quantity</h2>
+        <p><strong>Total Tray Count:</strong> <%= batch.totalTrayCount %></p>
+        <form action="/batch/<%= batch.batchNumber %>/update-quantity-died" method="POST">
+            <label for="quantityDied">Quantity Died:</label>
+            <input type="number" name="quantityDied" id="quantityDied" min="1" required>
+            <button type="submit">Update</button>
+        </form>
+    </div>
+
+<!-- Move Bench Tab -->
+<div id="moveBenchTab" class="tab-content">
+    <h2>Move Bench</h2>
+    <p><strong>Current Bench:</strong> <%= currentRow %></p>
+    <form action="/batch/<%= batch.batchNumber %>/move-bench" method="POST">
+        <label for="newBench">Select New Bench:</label>
+        <select name="newBench" id="newBench" required>
+            <% benches.forEach(bench => { %>
+                <option value="<%= bench %>"><%= bench %></option>
+            <% }); %>
+        </select>
+        <button type="submit">Move</button>
+    </form>
+</div>
+
+    
+    
+    
+
+    
+</body>
+</html>

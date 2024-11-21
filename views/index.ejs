@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Batch Selector</title>
+</head>
+<body>
+    <h1>Batch Selector</h1>
+    <label for="batchDropdown">Select a Batch:</label>
+    <select id="batchDropdown" onchange="navigateToBatch(this.value)">
+        <option value="" selected disabled>Select a batch</option>
+        <% batches.forEach(batch => { %>
+            <option value="<%= batch.batchNumber %>"><%= batch.batchNumber %></option>
+        <% }); %>
+    </select>
+
+    <script>
+        function navigateToBatch(batchNumber) {
+            if (batchNumber) {
+                window.location.href = `/batch/${encodeURIComponent(batchNumber)}`;
+            }
+        }
+    </script>
+</body>
+</html>

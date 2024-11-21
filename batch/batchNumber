@@ -1,0 +1,25 @@
+// Batch details route
+app.get('/batch/:batchNumber', async (req, res) => {
+    try {
+      const { batchNumber } = req.params;
+  
+      // Fetch the batch details
+      const batch = await AggregatedBatch.findOne({ batchNumber: decodeURIComponent(batchNumber) });
+      if (!batch) return res.status(404).send('Batch not found');
+  
+      // Fetch all benches for the Move Bench tab
+      const benches = await Bench.find({}, 'Row').sort({ Row: 1 });
+      console.log(benches); // Check if rows are being fetched correctly
+  
+      // Render the batch view, including currentRow and benches
+      res.render('batch', {
+        batch,
+        currentRow: batch.currentRow,
+        benches,
+      });
+    } catch (err) {
+      console.error('Error fetching batch details:', err);
+      res.status(500).send('Error loading batch details');
+    }
+  });
+  
