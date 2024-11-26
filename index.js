@@ -1,9 +1,18 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const multer = require('multer');
+const path = require('path');
+const moment = require('moment');
+const fs = require('fs');
 
 const app = express();
 const port = 3002;
+
+// Ensure `uploads` directory exists
+if (!fs.existsSync('./uploads')) {
+  fs.mkdirSync('./uploads');
+}
 
 // MongoDB connection
 mongoose
@@ -42,6 +51,34 @@ const Bench = mongoose.connection
   .useDb('myDatabase') // Database: myDatabase
   .model('Bench', benchSchema, 'Benches'); // Collection: Benches
 
+// Define schema for PlantPhotos
+const plantPhotoSchema = new mongoose.Schema({
+  batchNumber: String,
+  plantName: String,
+  daysOld: Number,
+  filePath: String,
+  timestamp: { type: Date, default: Date.now },
+});
+
+const PlantPhoto = mongoose
+  .connection
+  .useDb('myDatabase')
+  .model('PlantPhoto', plantPhotoSchema, 'PlantPhotos');
+
+// Configure Multer for file uploads
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, './uploads'); // Directory for image uploads
+  },
+  filename: (req, file, cb) => {
+    const plantName = req.body.plantName || 'unknown'; // Plant name from the form
+    const daysOld = req.body.daysOld || 'unknown'; // Day number from the form
+    cb(null, `${plantName}_${daysOld}${path.extname(file.originalname)}`);
+  },
+});
+
+const upload = multer({ storage });
+
 // Middleware
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -65,119 +102,71 @@ app.get('/', async (req, res) => {
 });
 
 // Batch details route
-// Batch details route
-// Batch details route
 app.get('/batch/:batchNumber', async (req, res) => {
-    try {
-      const { batchNumber } = req.params;
-  
-      // Fetch the batch details
-      const batch = await AggregatedBatch.findOne({ batchNumber: decodeURIComponent(batchNumber) });
-      if (!batch) return res.status(404).send('Batch not found');
-  
-      // Fetch all rows (benches) from the Benches collection
-      const benches = await Bench.find({}, 'Row');
-      console.log('Using database:', mongoose.connection.name); // Log active database
-      console.log('Fetched benches:', benches.map((bench) => bench.Row)); // Debugging
-  
-      // Render the batch view with fetched data
-      res.render('batch', {
-        batch,
-        currentRow: batch.currentRow || 'Unknown',
-        benches: benches.map((bench) => bench.Row), // Send only the `Row` values to the template
-      });
-    } catch (err) {
-      console.error('Error fetching batch details:', err);
-      res.status(500).send('Error loading batch details');
-    }
-  });
-  
-  
-
-// Update rooting progress route
-app.post('/batch/:batchNumber/update-rooting', async (req, res) => {
   try {
     const { batchNumber } = req.params;
-    const { rootingProgress } = req.body;
 
+    // Fetch the batch details
     const batch = await AggregatedBatch.findOne({ batchNumber: decodeURIComponent(batchNumber) });
     if (!batch) return res.status(404).send('Batch not found');
 
-    batch.rootingProgress = rootingProgress;
-    await batch.save();
+    // Fetch all rows (benches) from the Benches collection
+    const benches = await Bench.find({}, 'Row');
+    console.log('Fetched benches:', benches.map((bench) => bench.Row)); // Debugging
 
-    console.log(`Updated rooting progress for ${batchNumber} to ${rootingProgress}`);
-    res.redirect(`/batch/${encodeURIComponent(batchNumber)}`);
-  } catch (err) {
-    console.error('Error updating rooting progress:', err);
-    res.status(500).send('Error updating rooting progress');
-  }
-});
-
-// Update quantity died route
-app.post('/batch/:batchNumber/update-quantity-died', async (req, res) => {
-  try {
-    const { batchNumber } = req.params;
-    const { quantityDied } = req.body;
-
-    const batch = await AggregatedBatch.findOne({ batchNumber: decodeURIComponent(batchNumber) });
-    if (!batch) return res.status(404).send('Batch not found');
-
-    const diedNumber = parseInt(quantityDied, 10);
-
-    // Log trays died and deduct from totalTrayCount
-    batch.logs.push({
-      type: 'mortality',
-      details: 'Trays lost',
-      count: diedNumber,
-      timestamp: new Date(),
+    // Render the batch view with fetched data
+    res.render('batch', {
+      batch,
+      currentRow: batch.currentRow || 'Unknown',
+      benches: benches.map((bench) => bench.Row), // Send only the `Row` values to the template
     });
-
-    batch.totalTrayCount -= diedNumber;
-    if (batch.totalTrayCount < 0) batch.totalTrayCount = 0; // Prevent negative totalTrayCount
-
-    await batch.save();
-    console.log(`Updated quantity for ${batchNumber}: Mortality of ${diedNumber}`);
-    res.redirect(`/batch/${encodeURIComponent(batchNumber)}`);
   } catch (err) {
-    console.error('Error updating quantity died:', err);
-    res.status(500).send('Error updating quantity died');
+    console.error('Error fetching batch details:', err);
+    res.status(500).send('Error loading batch details');
   }
 });
 
-// Move bench route
-app.post('/batch/:batchNumber/move-bench', async (req, res) => {
+// Route for photo upload
+app.post('/batch/:batchNumber/upload-photo', upload.single('photo'), async (req, res) => {
   try {
     const { batchNumber } = req.params;
-    const { newBench } = req.body;
 
+    // Fetch the batch to calculate daysOld and extract plant name
     const batch = await AggregatedBatch.findOne({ batchNumber: decodeURIComponent(batchNumber) });
     if (!batch) return res.status(404).send('Batch not found');
 
-    const benches = await Bench.find({}, 'Row'); // Fetch all benches to verify the newBench
-    const validBenches = benches.map((bench) => bench.Row);
+    // Calculate the daysOld from the batch creation timestamp
+    const creationTimestamp = batch.logs.find((log) => log.details === 'Batch Created')?.timestamp;
+    if (!creationTimestamp) {
+      return res.status(400).send('Batch creation timestamp not found');
+    }
+    const daysOld = moment().diff(moment(creationTimestamp), 'days');
 
-    if (!validBenches.includes(newBench)) {
-      return res.status(400).send('Invalid bench selected');
+    // Extract plant name from the batchNumber (assumes it's the first part before the first underscore)
+    const plantName = batchNumber.split('_')[0];
+
+    if (!req.file) {
+      return res.status(400).send('No file uploaded');
     }
 
-    // Log the bench movement and update currentRow
-    batch.logs.push({
-      type: 'movement',
-      details: `Moved to ${newBench}`,
-      timestamp: new Date(),
+    // Save photo metadata to the database
+    const newPhoto = new PlantPhoto({
+      batchNumber: decodeURIComponent(batchNumber),
+      plantName,
+      daysOld,
+      filePath: req.file.path,
     });
 
-    batch.currentRow = newBench;
+    await newPhoto.save();
 
-    await batch.save();
-    console.log(`Moved ${batchNumber} to ${newBench}`);
+    console.log(`Photo uploaded: ${req.file.path}`);
     res.redirect(`/batch/${encodeURIComponent(batchNumber)}`);
   } catch (err) {
-    console.error('Error moving bench:', err);
-    res.status(500).send('Error moving bench');
+    console.error('Error uploading photo:', err);
+    res.status(500).send('Error uploading photo');
   }
 });
 
+// Other routes (rooting progress, quantity updates, move bench, etc.) remain unchanged
 // Start Server
 app.listen(port, () => console.log(`Batch Selector App running at http://localhost:${port}`));

@@ -47,7 +47,9 @@
         <div class="tab-link" data-tab="rootingStatusTab" onclick="showTab('rootingStatusTab')">Change Rooting Status</div>
         <div class="tab-link" data-tab="quantityTab" onclick="showTab('quantityTab')">Quantity Updates</div>
         <div class="tab-link" data-tab="moveBenchTab" onclick="showTab('moveBenchTab')">Move Bench</div>
+        <div class="tab-link" data-tab="photoUploadTab" onclick="showTab('photoUploadTab')">Upload Photo</div>
     </div>
+    
 
     <!-- Info Tab -->
     <div id="infoTab" class="tab-content" style="display: block;">
@@ -98,25 +100,38 @@
         </form>
     </div>
 
-<!-- Move Bench Tab -->
-<div id="moveBenchTab" class="tab-content">
-    <h2>Move Bench</h2>
-    <p><strong>Current Bench:</strong> <%= currentRow %></p>
-    <form action="/batch/<%= batch.batchNumber %>/move-bench" method="POST">
-        <label for="newBench">Select New Bench:</label>
-        <select name="newBench" id="newBench" required>
-            <% benches.forEach(bench => { %>
-                <option value="<%= bench %>"><%= bench %></option>
-            <% }); %>
-        </select>
-        <button type="submit">Move</button>
-    </form>
-</div>
+    <!-- Move Bench Tab -->
+    <div id="moveBenchTab" class="tab-content">
+        <h2>Move Bench</h2>
+        <p><strong>Current Bench:</strong> <%= currentRow %></p>
+        <form action="/batch/<%= batch.batchNumber %>/move-bench" method="POST">
+            <label for="newBench">Select New Bench:</label>
+            <select name="newBench" id="newBench" required>
+                <% benches.forEach(bench => { %>
+                    <option value="<%= bench %>"><%= bench %></option>
+                <% }); %>
+            </select>
+            <button type="submit">Move</button>
+        </form>
+    </div>
 
-    
-    
-    
+    <!-- Picture Upload Tab -->
+    <div id="photoUploadTab" class="tab-content">
+        <h2>Upload Photo</h2>
+        <form action="/batch/<%= batch.batchNumber %>/upload-photo" method="POST" enctype="multipart/form-data">
+            <label for="plantName">Plant Name:</label>
+            <input type="text" id="plantName" name="plantName" 
+                value="<%= batch.batchNumber.split('_')[0] %>" readonly />
 
-    
+            <label for="daysOld">Days Old:</label>
+            <input type="number" id="daysOld" name="daysOld" 
+                value="<%= Math.floor((Date.now() - new Date(batch.logs[0].timestamp)) / (1000 * 60 * 60 * 24)) %>" readonly />
+
+            <label for="photo">Upload Photo:</label>
+            <input type="file" id="photo" name="photo" accept="image/*" required><br><br>
+            
+            <button type="submit">Upload</button>
+        </form>
+    </div>
 </body>
 </html>
