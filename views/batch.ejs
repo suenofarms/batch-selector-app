@@ -16,122 +16,198 @@
         }
     </script>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        header {
+            background: #007bff;
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+        .container {
+            margin: 20px;
+        }
         .tabs {
             display: flex;
-            border-bottom: 1px solid #ccc;
+            border-bottom: 2px solid #007bff;
             margin-bottom: 10px;
         }
         .tab-link {
-            padding: 10px;
+            padding: 10px 15px;
             cursor: pointer;
-            border: 1px solid #ccc;
+            border: 1px solid #007bff;
             border-bottom: none;
-            background-color: #f9f9f9;
+            background-color: #f1f1f1;
             margin-right: 5px;
+            transition: background-color 0.3s ease;
         }
         .tab-link.active {
-            background-color: #fff;
+            background-color: #007bff;
+            color: white;
             font-weight: bold;
         }
         .tab-content {
             display: none;
+            border: 1px solid #ccc;
+            padding: 15px;
+        }
+        .tab-content h2 {
+            margin-top: 0;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
         }
     </style>
 </head>
 <body>
-    <h1>Batch Details</h1>
+    <header>
+        <h1>Batch Details</h1>
+    </header>
+    <div class="container">
+        <!-- Tabs Navigation -->
+        <div class="tabs">
+            <div class="tab-link active" data-tab="infoTab" onclick="showTab('infoTab')">Info</div>
+            <div class="tab-link" data-tab="rootingStatusTab" onclick="showTab('rootingStatusTab')">Change Rooting Status</div>
+            <div class="tab-link" data-tab="quantityTab" onclick="showTab('quantityTab')">Quantity Updates</div>
+            <div class="tab-link" data-tab="moveBenchTab" onclick="showTab('moveBenchTab')">Move Bench</div>
+            <div class="tab-link" data-tab="photoUploadTab" onclick="showTab('photoUploadTab')">Upload Photo</div>
+        </div>
 
-    <!-- Tabs Navigation -->
-    <div class="tabs">
-        <div class="tab-link active" data-tab="infoTab" onclick="showTab('infoTab')">Info</div>
-        <div class="tab-link" data-tab="rootingStatusTab" onclick="showTab('rootingStatusTab')">Change Rooting Status</div>
-        <div class="tab-link" data-tab="quantityTab" onclick="showTab('quantityTab')">Quantity Updates</div>
-        <div class="tab-link" data-tab="moveBenchTab" onclick="showTab('moveBenchTab')">Move Bench</div>
-        <div class="tab-link" data-tab="photoUploadTab" onclick="showTab('photoUploadTab')">Upload Photo</div>
-    </div>
-    
-
-    <!-- Info Tab -->
-    <div id="infoTab" class="tab-content" style="display: block;">
-        <h2>Info</h2>
-        <p><strong>Batch Number:</strong> <%= batch.batchNumber %></p>
-        <p><strong>Total Tray Count:</strong> <%= batch.totalTrayCount %></p>
-        <p><strong>Current Row:</strong> <%= batch.currentRow %></p>
-        <p><strong>Rooting Progress:</strong> <%= batch.rootingProgress %></p>
-        <p><strong>Status:</strong> <%= batch.status %></p>
-
-        <h3>Logs</h3>
-        <ul>
-            <% batch.logs.forEach(log => { %>
+        <div id="infoTab" class="tab-content" style="display: block;">
+            <h2>Info</h2>
+            <p><strong>Batch Number:</strong> <%= batch.batchNumber %></p>
+            <p><strong>Plant Name:</strong> <%= batch.plantName %></p>
+            <p><strong>Total Tray Count:</strong> <%= batch.totalTrayCount %></p>
+            <p><strong>Current Row:</strong> <%= batch.currentRow %></p>
+            <p><strong>Rooting Progress:</strong> <%= batch.rootingProgress %></p>
+            <p><strong>Status:</strong> <%= batch.status %></p>
+            <p><strong>Stick Date:</strong> <%= batch.stickDate %></p>
+            <p><strong>Finish Date:</strong> <%= batch.finishDate %></p>
+            <p><strong>Stick Week-Year:</strong> <%= batch.stickWeekYear %></p>
+            <p><strong>Finish Week-Year:</strong> <%= batch.finishWeekYear %></p>
+          
+            <h3>Logs</h3>
+            <ul>
+              <% batch.logs.forEach(log => { %>
                 <li>
-                    <strong>Type:</strong> <%= log.type %><br>
-                    <strong>Details:</strong> <%= log.details %><br>
-                    <strong>Count:</strong> <%= log.count %><br>
-                    <strong>Timestamp:</strong> <%= new Date(log.timestamp).toLocaleString() %>
+                  <strong>Type:</strong> <%= log.type %><br>
+                  <strong>Details:</strong> <%= log.details %><br>
+                  <strong>Count:</strong> <%= log.count %><br>
+                  <strong>Employee:</strong> <%= log.employee %><br>
+                  <strong>Timestamp:</strong> <%= log.timestamp %>
                 </li>
-            <% }); %>
-        </ul>
-    </div>
+              <% }); %>
+            </ul>
+          </div>
+          
 
-    <!-- Change Rooting Status Tab -->
-    <div id="rootingStatusTab" class="tab-content">
-        <h2>Change Rooting Status</h2>
-        <form action="/batch/<%= batch.batchNumber %>/update-rooting" method="POST">
-            <label for="rootingProgress">Select Rooting Progress:</label>
-            <select name="rootingProgress" id="rootingProgress" required>
-                <option value="Unrooted" <%= batch.rootingProgress === 'Unrooted' ? 'selected' : '' %>>Unrooted</option>
-                <option value="Callus" <%= batch.rootingProgress === 'Callus' ? 'selected' : '' %>>Callus</option>
-                <option value="Root Emergence" <%= batch.rootingProgress === 'Root Emergence' ? 'selected' : '' %>>Root Emergence</option>
-                <option value="Rooted" <%= batch.rootingProgress === 'Rooted' ? 'selected' : '' %>>Rooted</option>
-                <option value="Fully Rooted" <%= batch.rootingProgress === 'Fully Rooted' ? 'selected' : '' %>>Fully Rooted</option>
-            </select>
-            <button type="submit">Update</button>
-        </form>
-    </div>
+        <!-- Change Rooting Status Tab -->
+        <div id="rootingStatusTab" class="tab-content">
+            <h2>Change Rooting Status</h2>
+            <form action="/batch/<%= batch.batchNumber %>/update-rooting" method="POST">
+                <div class="form-group">
+                    <label for="rootingProgress">Select Rooting Progress:</label>
+                    <select name="rootingProgress" id="rootingProgress" required>
+                        <option value="Unrooted" <%= batch.rootingProgress === 'Unrooted' ? 'selected' : '' %>>Unrooted</option>
+                        <option value="Callus" <%= batch.rootingProgress === 'Callus' ? 'selected' : '' %>>Callus</option>
+                        <option value="Root Emergence" <%= batch.rootingProgress === 'Root Emergence' ? 'selected' : '' %>>Root Emergence</option>
+                        <option value="Rooted" <%= batch.rootingProgress === 'Rooted' ? 'selected' : '' %>>Rooted</option>
+                        <option value="Fully Rooted" <%= batch.rootingProgress === 'Fully Rooted' ? 'selected' : '' %>>Fully Rooted</option>
+                    </select>
+                </div>
+                <button type="submit">Update</button>
+            </form>
+        </div>
 
-    <!-- Quantity Tab -->
-    <div id="quantityTab" class="tab-content">
-        <h2>Update Quantity</h2>
-        <p><strong>Total Tray Count:</strong> <%= batch.totalTrayCount %></p>
-        <form action="/batch/<%= batch.batchNumber %>/update-quantity-died" method="POST">
-            <label for="quantityDied">Quantity Died:</label>
-            <input type="number" name="quantityDied" id="quantityDied" min="1" required>
-            <button type="submit">Update</button>
-        </form>
-    </div>
+        <!-- Quantity Tab -->
+        <div id="quantityTab" class="tab-content">
+            <h2>Update Quantity</h2>
+            <form action="/batch/<%= batch.batchNumber %>/update-quantity-died" method="POST">
+                <div class="form-group">
+                    <label for="quantityDied">Quantity Died:</label>
+                    <input type="number" name="quantityDied" id="quantityDied" min="1" required>
+                </div>
+                <button type="submit">Update</button>
+            </form>
+        </div>
 
-    <!-- Move Bench Tab -->
-    <div id="moveBenchTab" class="tab-content">
-        <h2>Move Bench</h2>
-        <p><strong>Current Bench:</strong> <%= currentRow %></p>
-        <form action="/batch/<%= batch.batchNumber %>/move-bench" method="POST">
-            <label for="newBench">Select New Bench:</label>
-            <select name="newBench" id="newBench" required>
-                <% benches.forEach(bench => { %>
-                    <option value="<%= bench %>"><%= bench %></option>
-                <% }); %>
-            </select>
-            <button type="submit">Move</button>
-        </form>
-    </div>
+        <!-- Move Bench Tab -->
+        <div id="moveBenchTab" class="tab-content">
+            <h2>Move Bench</h2>
+            <form action="/batch/<%= batch.batchNumber %>/move-bench" method="POST">
+                <div class="form-group">
+                    <label for="newBench">Select New Bench:</label>
+                    <select name="newBench" id="newBench" required>
+                        <% benches.forEach(bench => { %>
+                            <option value="<%= bench %>"><%= bench %></option>
+                        <% }); %>
+                    </select>
+                </div>
+                <button type="submit">Move</button>
+            </form>
+        </div>
 
-    <!-- Picture Upload Tab -->
-    <div id="photoUploadTab" class="tab-content">
-        <h2>Upload Photo</h2>
-        <form action="/batch/<%= batch.batchNumber %>/upload-photo" method="POST" enctype="multipart/form-data">
-            <label for="plantName">Plant Name:</label>
-            <input type="text" id="plantName" name="plantName" 
-                value="<%= batch.batchNumber.split('_')[0] %>" readonly />
+        <!-- Picture Upload Tab -->
+        <div id="photoUploadTab" class="tab-content">
+            <h2>Upload Photo</h2>
+            <form action="/batch/<%= batch.batchNumber %>/upload-photo" method="POST" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label for="plantName">Plant Name:</label>
+                    <input type="text" id="plantName" name="plantName" 
+                        value="<%= batch.plantName %>" readonly />
+                </div>
+                <div class="form-group">
+                    <label for="daysOld">Days Old:</label>
+                    <input type="number" id="daysOld" name="daysOld" 
+                        value="<%= Math.floor((Date.now() - new Date(batch.stickDate)) / (1000 * 60 * 60 * 24)) %>" readonly />
+                </div>
+                <div class="form-group">
+                    <label for="photo">Upload Photo:</label>
+                    <input type="file" id="photo" name="photo" accept="image/*" required>
+                </div>
+                <button type="submit">Upload</button>
+            </form>
+        </div>
 
-            <label for="daysOld">Days Old:</label>
-            <input type="number" id="daysOld" name="daysOld" 
-                value="<%= Math.floor((Date.now() - new Date(batch.logs[0].timestamp)) / (1000 * 60 * 60 * 24)) %>" readonly />
-
-            <label for="photo">Upload Photo:</label>
-            <input type="file" id="photo" name="photo" accept="image/*" required><br><br>
-            
-            <button type="submit">Upload</button>
-        </form>
+        <div id="mostRecentPhoto">
+            <h2>Most Recent Photo</h2>
+            <% if (batch.mostRecentPhoto) { %>
+              <img 
+                src="data:image/jpeg;base64,<%= batch.mostRecentPhoto.data %>" 
+                alt="<%= batch.mostRecentPhoto.filename %>" 
+                style="max-width: 100%; height: auto;" 
+              />
+              <p><strong>Filename:</strong> <%= batch.mostRecentPhoto.filename %></p>
+              <p><strong>Days Old:</strong> <%= batch.mostRecentPhoto.daysOld %></p>
+              <p><strong>Uploaded At:</strong> <%= new Date(batch.mostRecentPhoto.timestamp).toLocaleString() %></p>
+            <% } else { %>
+              <p>No photos uploaded yet for this batch.</p>
+            <% } %>
+          </div>
+          
     </div>
 </body>
 </html>
